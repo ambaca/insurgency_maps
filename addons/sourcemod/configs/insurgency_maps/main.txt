@@ -1,0 +1,8 @@
+
+"#base"		"pvp.txt"
+"#base"		"coops.txt"
+
+"ins_maps_modes"
+{
+
+}

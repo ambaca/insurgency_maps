@@ -1,0 +1,21 @@
+
+
+"ins_maps_modes"
+{
+	"gamemodes"
+	{
+		"ambush"           "pvp"
+		"battle"           "pvp"
+		"elimination"      "pvp"
+		"firefight"        "pvp"
+		"flashpoint"       "pvp"
+		"infiltrate"       "pvp"
+		"invasion"         "pvp"
+		"occupy"           "pvp"
+		"push"             "pvp"
+		"searchdestroy"    "pvp"
+		"skirmish"         "pvp"
+		"strike"           "pvp"
+		"vendetta"         "pvp"
+	}
+}

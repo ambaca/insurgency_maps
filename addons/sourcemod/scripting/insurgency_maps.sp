@@ -171,8 +171,8 @@ public void OnConfigsExecuted()
 
 	// check required file(s)
 	char source[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, source, sizeof(source), "configs/insurgency/main.txt");
-	if(!FileExists(source)) SetFailState("Couldn't find or open \"configs/insurgency/main.txt\" file.");
+	BuildPath(Path_SM, source, sizeof(source), "configs/insurgency_maps/main.txt");
+	if(!FileExists(source)) SetFailState("Couldn't find or open \"configs/insurgency_maps/main.txt\" file.");
 
 	// copy gamemodes in kv
 	KeyValues kv = new KeyValues("data");
@@ -180,7 +180,7 @@ public void OnConfigsExecuted()
 	{
 		delete kv;
 		delete dir;
-		SetFailState("Couldn't get gamemodes from \"configs/insurgency/main.txt\" file.");
+		SetFailState("Couldn't get gamemodes from \"configs/insurgency_maps/main.txt\" file.");
 	}
 
 	kv.Rewind();

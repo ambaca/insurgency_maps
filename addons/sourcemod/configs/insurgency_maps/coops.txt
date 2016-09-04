@@ -1,0 +1,15 @@
+
+
+
+"ins_maps_modes"
+{
+	"gamemodes"
+	{
+		"checkpoint"  "coop"
+		"conquer"     "coop"
+		"hunt"        "coop"
+		"invalid"     "coop"
+		"outpost"     "coop"
+		"survival"    "coop"
+	}
+}
