@@ -20,6 +20,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("InsurgencyMap_MapGamemodesArray", _Native_InsurgencyMap_MapGamemodesArray);
 	CreateNative("InsurgencyMap_GamemodeMapsArray", _Native_InsurgencyMap_GamemodeMapsArray);
 	CreateNative("InsurgencyMap_Gamemode", _Native_InsurgencyMap_Gamemode);
+	CreateNative("InsurgencyMap_GamemodeArray", _Native_InsurgencyMap_GamemodeArray);
+	CreateNative("InsurgencyMap_IsGameTypeCoop", _Native_InsurgencyMap__IsGameTypeCoop);
+
 	return APLRes_Success;
 }
 
@@ -162,6 +165,60 @@ public _Native_InsurgencyMap_Gamemode(Handle plugin, int numParams)
 	SetNativeString(1, gamemode, param_len, false);
 }
 
+public _Native_InsurgencyMap_GamemodeArray(Handle plugin, int numParams)
+{
+	char gamemode[64];
+	ArrayList array = GetNativeCell(1);
+
+	if(array == INVALID_HANDLE) return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Handle, create adt_array, \"CreateArray()\" or \"new ArrayList()\"!");
+
+	if(kvlistmaps.JumpToKey("gamemodes") && kvlistmaps.GotoFirstSubKey(false))
+	{
+		do
+		{
+			kvlistmaps.GetSectionName(gamemode, sizeof(gamemode));
+			array.PushString(gamemode);
+		}
+		while(kvlistmaps.GotoNextKey(false))
+	}
+	kvlistmaps.Rewind();
+
+	return _:array;
+}
+
+public int _Native_InsurgencyMap__IsGameTypeCoop(Handle plugin, int numParams)
+{
+	int len;
+	GetNativeStringLength(1, len);
+
+	if (len <= 0)
+	{
+	  return false;
+	}
+
+	char buffer[64];
+	bool IsCoop;
+	char gamemode[64];
+	GetNativeString(1, gamemode, sizeof(gamemode));
+
+	if(kvlistmaps.JumpToKey("type/coop") && kvlistmaps.GotoFirstSubKey(false))
+	{
+		do
+		{
+			kvlistmaps.GetSectionName(buffer, sizeof(buffer));
+			if(StrEqual(gamemode, buffer, false))
+			{
+				IsCoop = true;
+				break;
+			}
+		}
+		while(kvlistmaps.GotoNextKey(false))
+	}
+	kvlistmaps.Rewind();
+
+	return IsCoop;
+}
+
 public void OnConfigsExecuted()
 {
 	// check maps folder exist
@@ -230,7 +287,7 @@ public void OnConfigsExecuted()
 
 		
 		
-		// add map in maplist with valid cpsetup gamemodes ("configs/insurgency/main.txt")
+		// add map in maplist with valid cpsetup gamemodes ("configs/insurgency_maps/main.txt")
 		ReplaceString(buffer, sizeof(buffer), ".txt", "", false);
 		strcopy(mapname, sizeof(mapname), buffer[5]);
 

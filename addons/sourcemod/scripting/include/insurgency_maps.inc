@@ -5,32 +5,34 @@
 #define _insurgency_maps_included_
  
 /**
- * Return map count
+ * Get map count
  *
- * @return        	Map count integer.
+ * @return		Return map count.
  */
 native int InsurgencyMap_MapCount();
 
 /**
- * Create adt_array before using this function.
+ * Get all maps
  *
- * @param array		Fill the array with the maps.
+ * @param array		Fill the adt_array with maps.
  * @noreturn
  */
 native void InsurgencyMap_MapArray(ArrayList array);
 
 /**
- * Create adt_array before using this function.
+ * Provides all the gamemodes in a given map .
  *
- * @param array		Fill the array with the gamemodes in a given map.
+ * @param map		Map name to get gamemodes.
+ * @param array		Fill the adt_array with the gamemodes.
  * @noreturn
  */
 native void InsurgencyMap_MapGamemodesArray(const char[] mapname, ArrayList array);
 
 /**
- * Create adt_array before using this function.
+ * Provides all the maps in a given gamemode .
  *
- * @param array		Fill the array with the maps in a given gamemode.
+ * @param gamemode		Gamemode to get maps.
+ * @param array			Fill the array with the maps.
  * @noreturn
  */
 native void InsurgencyMap_GamemodeMapsArray(const char[] gamemode, ArrayList array);
@@ -38,10 +40,29 @@ native void InsurgencyMap_GamemodeMapsArray(const char[] gamemode, ArrayList arr
 /**
  * Get current gamemode
  *
- * @param gamemode		Return current gamemode
+ * @param gamemode		String buffer to store gamemode.
+ * @param len			Maximum size of string buffer.
  * @noreturn
  */
-native void InsurgencyMap_Gamemode(char[] gamemode, len);
+native void InsurgencyMap_Gamemode(char[] gamemode, int len);
+
+/**
+ * Get all gamemodes
+ *
+ * @param array		Fill the adt_array with gamemodes.
+ * @noreturn
+ */
+native void InsurgencyMap_GamemodeArray(ArrayList array);
+
+
+/**
+ * Check is the gamemode type cooperative.
+ *
+ * @param gamemode		Gamemode name to check.
+ *
+ * @return bool			True if gamemode type is coop, pvp when false
+ */
+native bool InsurgencyMap_IsGameTypeCoop(const char[] gamemode);
 
 
 

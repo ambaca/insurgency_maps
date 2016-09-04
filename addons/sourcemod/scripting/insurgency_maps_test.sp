@@ -8,43 +8,55 @@ public OnPluginStart()
 
 public Action test(int client, int agrs)
 {
-	PrintToServer("maps %i", InsurgencyMap_MapCount());
+	PrintToServer("InsurgencyMap_MapCount() = %i", InsurgencyMap_MapCount());
 
 	ArrayList array = new ArrayList(ByteCountToCells(64));
 
 	InsurgencyMap_MapArray(array);
 
-	char map[64];
+	char buffer[64];
 	for(int i = 0; i < array.Length; i++)
 	{
-		array.GetString(i, map, sizeof(map));
-		PrintToServer(map);
+		array.GetString(i, buffer, sizeof(buffer));
+		PrintToServer("InsurgencyMap_MapArray %i %s", i, buffer);
 	}
 
 	array.Clear();
 
+	InsurgencyMap_MapGamemodesArray("market", array);
 
-	InsurgencyMap_MapGamemodesArray("baghdad_b5", array);
 	for(int i = 0; i < array.Length; i++)
 	{
-		array.GetString(i, map, sizeof(map));
-		PrintToServer("++%s", map);
+		array.GetString(i, buffer, sizeof(buffer));
+		PrintToServer("InsurgencyMap_MapGamemodesArray(market) %i %s", i, buffer);
 	}
 
 	array.Clear();
 
+	InsurgencyMap_GamemodeMapsArray("push", array);
 
-	InsurgencyMap_GamemodeMapsArray("ambush", array);
 	for(int i = 0; i < array.Length; i++)
 	{
-		array.GetString(i, map, sizeof(map));
-		PrintToServer("-%s", map);
+		array.GetString(i, buffer, sizeof(buffer));
+		PrintToServer("InsurgencyMap_GamemodeMapsArray(push) %i %s", i, buffer);
 	}
-	
+
+	InsurgencyMap_Gamemode(buffer, sizeof(buffer));
+	PrintToServer("InsurgencyMap_Gamemode %s", buffer);
+
+
+	array.Clear();
+
+	InsurgencyMap_GamemodeArray(array);
+
+	for(int i = 0; i < array.Length; i++)
+	{
+		array.GetString(i, buffer, sizeof(buffer));
+		PrintToServer("InsurgencyMap_GamemodeArray %i %s %s", i, buffer, InsurgencyMap_IsGameTypeCoop(buffer) ? "coop":"pvp");
+	}
 	delete array;
 
 
-	InsurgencyMap_Gamemode(map, sizeof(map));
-	PrintToServer("+%s", map);
+
 	return Plugin_Handled;
 }
