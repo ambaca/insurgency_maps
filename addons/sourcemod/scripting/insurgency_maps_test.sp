@@ -23,22 +23,22 @@ public Action test(int client, int agrs)
 
 	array.Clear();
 
-	InsurgencyMap_MapGamemodesArray("market", array);
+	InsurgencyMap_MapGamemodesArray("buhriz", array);
 
 	for(int i = 0; i < array.Length; i++)
 	{
 		array.GetString(i, buffer, sizeof(buffer));
-		PrintToServer("InsurgencyMap_MapGamemodesArray(market) %i %s", i, buffer);
+		PrintToServer("InsurgencyMap_MapGamemodesArray(buhriz) %i %s", i, buffer);
 	}
 
 	array.Clear();
 
-	InsurgencyMap_GamemodeMapsArray("push", array);
+	InsurgencyMap_GamemodeMapsArray("checkpoint", array);
 
 	for(int i = 0; i < array.Length; i++)
 	{
 		array.GetString(i, buffer, sizeof(buffer));
-		PrintToServer("InsurgencyMap_GamemodeMapsArray(push) %i %s", i, buffer);
+		PrintToServer("InsurgencyMap_GamemodeMapsArray(checkpoint) %i %s", i, buffer);
 	}
 
 	InsurgencyMap_Gamemode(buffer, sizeof(buffer));

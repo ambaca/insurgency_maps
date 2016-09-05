@@ -13,8 +13,6 @@ public void OnPluginStart()
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	RegPluginLibrary("insurgency_maps");
-
 	CreateNative("InsurgencyMap_MapCount", _Native_InsurgencyMap_MapCount);
 	CreateNative("InsurgencyMap_MapArray", _Native_InsurgencyMap_MapArray);
 	CreateNative("InsurgencyMap_MapGamemodesArray", _Native_InsurgencyMap_MapGamemodesArray);
@@ -22,6 +20,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("InsurgencyMap_Gamemode", _Native_InsurgencyMap_Gamemode);
 	CreateNative("InsurgencyMap_GamemodeArray", _Native_InsurgencyMap_GamemodeArray);
 	CreateNative("InsurgencyMap_IsGameTypeCoop", _Native_InsurgencyMap__IsGameTypeCoop);
+
+	RegPluginLibrary("insurgency_maps");
 
 	return APLRes_Success;
 }
@@ -133,34 +133,21 @@ public _Native_InsurgencyMap_GamemodeMapsArray(Handle plugin, int numParams)
 public _Native_InsurgencyMap_Gamemode(Handle plugin, int numParams)
 {
 	int param_len = GetNativeCell(2);
-	int len;
-	GetNativeStringLength(1, len);
 
-	if (len <= 0 || param_len <= 0)
+	if (param_len <= 0)
 	{
 	  return;
 	}
 
-	if(len < param_len) param_len = len;
-
-	char clsname[64];
 	char gamemode[64];
 
-	if(kvlistmaps.JumpToKey("gamemodes") && kvlistmaps.GotoFirstSubKey(false))
-	{
-		do
-		{
-			kvlistmaps.GetSectionName(gamemode, sizeof(gamemode));
-			Format(clsname, sizeof(clsname), "logic_%s", gamemode);
+	int logic = GameRules_GetPropEnt("m_hLogicGameType");
 
-			if(FindEntityByClassname(-1, clsname) > MaxClients)
-			{
-				break;
-			}
-		}
-		while(kvlistmaps.GotoNextKey(false))
+	if(logic != -1)
+	{
+		GetEntityClassname(logic, gamemode, sizeof(gamemode));
+		ReplaceString(gamemode, sizeof(gamemode), "logic_", "", false);
 	}
-	kvlistmaps.Rewind();
 
 	SetNativeString(1, gamemode, param_len, false);
 }
@@ -221,11 +208,6 @@ public int _Native_InsurgencyMap__IsGameTypeCoop(Handle plugin, int numParams)
 
 public void OnConfigsExecuted()
 {
-	// check maps folder exist
-	DirectoryListing dir = OpenDirectory("maps", true, NULL_STRING);
-	if(dir == INVALID_HANDLE) SetFailState("Couldn't find or open \"maps\" folder.");
-
-
 	// check required file(s)
 	char source[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, source, sizeof(source), "configs/insurgency_maps/main.txt");
@@ -236,89 +218,77 @@ public void OnConfigsExecuted()
 	if(!kv.ImportFromFile(source) || !kv.JumpToKey("gamemodes"))
 	{
 		delete kv;
-		delete dir;
 		SetFailState("Couldn't get gamemodes from \"configs/insurgency_maps/main.txt\" file.");
 	}
 
 	kv.Rewind();
 
-
-
-
-
-
-
-	// ------
-
+	
 	char buffer[PLATFORM_MAX_PATH];
 	char mapname[PLATFORM_MAX_PATH];
 	char mode[PLATFORM_MAX_PATH];
 	char tmp[PLATFORM_MAX_PATH];
-
+	
 	KeyValues maptxt;
-	FileType type;
-	int dot;
 
-	// loop all files inside maps folder
-	while(dir.GetNext(buffer, sizeof(buffer), type))
+	ArrayList maplist = new ArrayList(ByteCountToCells(64));
+	int serial;
+	ReadMapList(maplist, serial, "insurgency_maps plugin", MAPLIST_FLAG_MAPSFOLDER|MAPLIST_FLAG_NO_DEFAULT);
+
+	if(maplist != INVALID_HANDLE)
 	{
-		if(type != FileType_File) continue;
+		SortADTArray(maplist, Sort_Ascending, Sort_String);
 
-	
-	
-		// file is not valid map .bsp
-		dot = FindCharInString(buffer, '.', true);
-		if(dot == -1 || !StrEqual(buffer[dot], ".bsp", false) || !IsMapValid(buffer)) continue;
+		int x = GetArraySize(maplist);
 
-
-
-		// find map cpsetup script file
-		ReplaceString(buffer, sizeof(buffer), ".bsp", ".txt", false);
-		Format(buffer, sizeof(buffer), "maps/%s", buffer);
-		if(!FileExists(buffer, true, NULL_STRING)) continue;
-
-
-		// copy cpsetup script file
-		if(maptxt != INVALID_HANDLE) delete maptxt;
-		maptxt = new KeyValues("data");
-		if(!maptxt.ImportFromFile(buffer)) continue;
-
-
-
-		
-		
-		// add map in maplist with valid cpsetup gamemodes ("configs/insurgency_maps/main.txt")
-		ReplaceString(buffer, sizeof(buffer), ".txt", "", false);
-		strcopy(mapname, sizeof(mapname), buffer[5]);
-
-		if(!maptxt.GotoFirstSubKey(false)) continue;
-		
-		do
+		for(int a = 0; a < x; a++)
 		{
-			maptxt.GetSectionName(mode, sizeof(mode));
+			GetArrayString(maplist, a, buffer, sizeof(buffer));
+			//PrintToServer("finall %i %s", a, buffer);
 
-			kv.JumpToKey("gamemodes");
-			kv.GetString(mode, tmp, sizeof(tmp), NULL_STRING);
-			kv.Rewind();
+			// find map cpsetup script file
+			Format(buffer, sizeof(buffer), "maps/%s.txt", buffer);
+			if(!FileExists(buffer, true, NULL_STRING)) continue;
 
-			// does map cpsetup match with filter ?
-			if(!StrEqual(tmp, NULL_STRING, false))
+
+			// copy cpsetup script file
+			if(maptxt != INVALID_HANDLE) delete maptxt;
+			maptxt = new KeyValues("data");
+			if(!maptxt.ImportFromFile(buffer)) continue;
+
+		
+			// add map in maplist with valid cpsetup gamemodes ("configs/insurgency_maps/main.txt")
+			ReplaceString(buffer, sizeof(buffer), ".txt", "", false);
+			strcopy(mapname, sizeof(mapname), buffer[5]);
+
+			if(!maptxt.GotoFirstSubKey(false)) continue;
+			
+			do
 			{
-				Format(buffer, sizeof(buffer), "maps/%s/%s", mapname, mode);
-				kvlistmaps.SetString(buffer, tmp);
+				maptxt.GetSectionName(mode, sizeof(mode));
 
-				Format(buffer, sizeof(buffer), "gamemodes/%s/%s", mode, mapname);
-				kvlistmaps.SetString(buffer, tmp);
+				kv.JumpToKey("gamemodes");
+				kv.GetString(mode, tmp, sizeof(tmp), NULL_STRING);
+				kv.Rewind();
 
-				Format(buffer, sizeof(buffer), "type/%s/%s", tmp, mode);
-				kvlistmaps.SetString(buffer, tmp);
+				// does map cpsetup match with filter ?
+				if(!StrEqual(tmp, NULL_STRING, false))
+				{
+					Format(buffer, sizeof(buffer), "maps/%s/%s", mapname, mode);
+					kvlistmaps.SetString(buffer, tmp);
+
+					Format(buffer, sizeof(buffer), "gamemodes/%s/%s", mode, mapname);
+					kvlistmaps.SetString(buffer, tmp);
+
+					Format(buffer, sizeof(buffer), "type/%s/%s", tmp, mode);
+					kvlistmaps.SetString(buffer, tmp);
+				}
 			}
+			while(maptxt.GotoNextKey(false))
 		}
-		while(maptxt.GotoNextKey(false))
-
 	}
-	delete dir;
 
+	delete maplist;
 	delete kv;
 	delete maptxt;
 
