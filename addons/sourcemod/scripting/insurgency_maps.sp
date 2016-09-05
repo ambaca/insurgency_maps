@@ -19,7 +19,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("InsurgencyMap_GamemodeMapsArray", _Native_InsurgencyMap_GamemodeMapsArray);
 	CreateNative("InsurgencyMap_Gamemode", _Native_InsurgencyMap_Gamemode);
 	CreateNative("InsurgencyMap_GamemodeArray", _Native_InsurgencyMap_GamemodeArray);
-	CreateNative("InsurgencyMap_IsGameTypeCoop", _Native_InsurgencyMap__IsGameTypeCoop);
+	CreateNative("InsurgencyMap_IsGameTypeCoop", _Native_InsurgencyMap_IsGameTypeCoop);
 
 	RegPluginLibrary("insurgency_maps");
 
@@ -173,7 +173,7 @@ public _Native_InsurgencyMap_GamemodeArray(Handle plugin, int numParams)
 	return _:array;
 }
 
-public int _Native_InsurgencyMap__IsGameTypeCoop(Handle plugin, int numParams)
+public int _Native_InsurgencyMap_IsGameTypeCoop(Handle plugin, int numParams)
 {
 	int len;
 	GetNativeStringLength(1, len);
