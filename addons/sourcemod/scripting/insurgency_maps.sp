@@ -231,9 +231,9 @@ public void OnConfigsExecuted()
 	
 	KeyValues maptxt;
 
-	ArrayList maplist = new ArrayList(ByteCountToCells(64));
+	ArrayList maplist = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 	int serial;
-	ReadMapList(maplist, serial, "insurgency_maps plugin", MAPLIST_FLAG_MAPSFOLDER|MAPLIST_FLAG_NO_DEFAULT);
+	ReadMapList(maplist, serial, "insurgency_maps plugin", MAPLIST_FLAG_MAPSFOLDER|MAPLIST_FLAG_NO_DEFAULT|MAPLIST_FLAG_CLEARARRAY);
 
 	if(maplist != INVALID_HANDLE)
 	{
