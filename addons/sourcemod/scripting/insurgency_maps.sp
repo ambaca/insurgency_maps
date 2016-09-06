@@ -8,6 +8,7 @@ KeyValues kvlistmaps;
 public void OnPluginStart()
 {
 	kvlistmaps = new KeyValues("data");
+	RegServerCmd("sm_dump_workshop_maps", sm_dump_workshop_maps, "Creates file maps/workshop/workshop_maps.txt filled legacy workshop maps", FCVAR_NONE);
 	OnConfigsExecuted();
 }
 
@@ -24,6 +25,55 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	RegPluginLibrary("insurgency_maps");
 
 	return APLRes_Success;
+}
+
+public Action sm_dump_workshop_maps(int args)
+{
+	char maps_workshop[] = "maps\\workshop";
+
+	DirectoryListing dir_maps_workshop = OpenDirectory(maps_workshop, true, NULL_STRING);
+	if(dir_maps_workshop == null) return Plugin_Handled;
+
+	File workshop_maps = OpenFile("maps\\workshop\\workshop_maps.txt", "wb");
+	if(workshop_maps == null)
+	{
+		delete dir_maps_workshop;
+		LogError("Couldn't create or open file maps\\workshop\\workshop_maps.txt!");
+		return Plugin_Handled;
+	}
+
+	char map[PLATFORM_MAX_PATH];
+	char id[PLATFORM_MAX_PATH];
+	DirectoryListing dir_id;
+	FileType type;
+	int dot;
+	
+	while(dir_maps_workshop.GetNext(id, sizeof(id), type))
+	{
+		if(StrEqual(id, ".", false) || StrEqual(id, "..", false) || type != FileType_Directory) continue;
+
+		Format(id, sizeof(id), "%s\\%s", maps_workshop, id);
+		if((dir_id = OpenDirectory(id, true, NULL_STRING)) == null) continue;
+
+		while(dir_id.GetNext(map, sizeof(map), type))
+		{
+			if(type != FileType_File) continue;
+
+			if((dot = FindCharInString(map, '.', true)) == -1 || !StrEqual(map[dot], ".bsp", false)) continue;
+
+			map[dot] = '\0';
+			Format(map, sizeof(map), "%s\\%s", id[5], map);
+
+			if(IsMapValid(map)) workshop_maps.WriteLine(map);
+		}
+		delete dir_id;
+	}
+
+	delete dir_maps_workshop;
+	delete workshop_maps;
+
+
+	return Plugin_Handled;
 }
 
 public int _Native_InsurgencyMap_MapCount(Handle plugin, int numParams)
@@ -234,6 +284,7 @@ public void OnConfigsExecuted()
 	ArrayList maplist = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 	int serial;
 	ReadMapList(maplist, serial, "insurgency_maps plugin", MAPLIST_FLAG_MAPSFOLDER|MAPLIST_FLAG_NO_DEFAULT|MAPLIST_FLAG_CLEARARRAY);
+	ReadMapList(maplist, serial, "insurgency_maps plugin workshop", MAPLIST_FLAG_NO_DEFAULT); // support to old workshop maps
 
 	if(maplist != INVALID_HANDLE)
 	{
@@ -293,8 +344,8 @@ public void OnConfigsExecuted()
 	delete maptxt;
 
 	// debug kv tree
-	//KvRewind(kvlistmaps);
-	//KeyValuesToFile(kvlistmaps, "kv.txt");
+	KvRewind(kvlistmaps);
+	KeyValuesToFile(kvlistmaps, "kv.txt");
 
 
 	kvlistmaps.Rewind();
