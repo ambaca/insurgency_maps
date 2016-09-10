@@ -45,25 +45,22 @@ public void AdminMenu_ChangeLevel(TopMenu topmenu, TopMenuAction action, TopMenu
 	}
 	else if (action == TopMenuAction_SelectOption)
 	{
-		DisplayChangeLevelMenu(param);
+		Menu menu = new Menu(MenuHandler_ChangeLevel);
+
+		char title[100];
+		Format(title, sizeof(title), "Change level");
+		menu.SetTitle(title);
+		menu.ExitBackButton = true;
+
+		InsurgencyMap_Gamemode(title, sizeof(title));
+		Format(title, sizeof(title), "Choose map with current gamemode (%s)", title);
+		
+		menu.AddItem("", 		title);
+		menu.AddItem("", 		"Choose map and gamemode");
+		menu.AddItem("", 		"Choose gamemode and map");
+
+		menu.Display(param, MENU_TIME_FOREVER);
 	}
-}
-
-// Admin menu/Server Commands/Change Level
-void DisplayChangeLevelMenu(int client)
-{
-	Menu menu = new Menu(MenuHandler_ChangeLevel);
-
-	char title[100];
-	Format(title, sizeof(title), "Change level");
-	menu.SetTitle(title);
-	menu.ExitBackButton = true;
-
-	menu.AddItem("", 		"Choose map with current gamemode");
-	menu.AddItem("", 		"Choose map -> gamemode");
-	menu.AddItem("", 		"Choose gamemode -> map");
-
-	menu.Display(client, MENU_TIME_FOREVER);
 }
 
 
@@ -86,7 +83,7 @@ public int MenuHandler_ChangeLevel(Menu menu, MenuAction action, int param1, int
 		{
 			case 0:
 			{
-				char gamemode[64];
+				char gamemode[PLATFORM_MAX_PATH];
 				InsurgencyMap_Gamemode(gamemode, sizeof(gamemode));
 
 				if(strlen(gamemode) <= 0)
@@ -95,7 +92,7 @@ public int MenuHandler_ChangeLevel(Menu menu, MenuAction action, int param1, int
 					return;
 				}
 
-				ArrayList array = new ArrayList(ByteCountToCells(64));
+				ArrayList array = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 				InsurgencyMap_GamemodeMapsArray(gamemode, array);
 
 				int count = GetArraySize(array);
@@ -109,8 +106,8 @@ public int MenuHandler_ChangeLevel(Menu menu, MenuAction action, int param1, int
 
 				Menu newmenu = new Menu(MenuHandler_Map);
 
-				char info[64];
-				char map[64];
+				char info[PLATFORM_MAX_PATH];
+				char map[PLATFORM_MAX_PATH];
 				Format(info, sizeof(info), "Choose map (%s)", gamemode);
 
 				newmenu.SetTitle(info);
@@ -143,10 +140,10 @@ public int MenuHandler_ChangeLevel(Menu menu, MenuAction action, int param1, int
 
 				Menu newmenu = new Menu(MenuHandler_MapGamemode);
 
-				char info[64];
-				char map[64];
+				char info[PLATFORM_MAX_PATH];
+				char map[PLATFORM_MAX_PATH];
 
-				Format(info, sizeof(info), "Choose map -> next gamemode");
+				Format(info, sizeof(info), "Choose map, then next gamemode");
 				newmenu.SetTitle(info);
 
 				newmenu.ExitBackButton = true;
@@ -163,12 +160,47 @@ public int MenuHandler_ChangeLevel(Menu menu, MenuAction action, int param1, int
 			}
 			case 2:
 			{
+				ArrayList gamemodes = new ArrayList(ByteCountToCells(64));
+				InsurgencyMap_GamemodeArray(gamemodes);
+
+				int count = GetArraySize(gamemodes);
+
+				if(count <= 0)
+				{
+					delete gamemodes;
+					hTopMenu.Display(param1, TopMenuPosition_LastCategory);
+					return;
+				}
+
+				Menu newmenu = new Menu(MenuHandler_GamemodeMap);
+
+				char info[PLATFORM_MAX_PATH];
+				char gamemode[PLATFORM_MAX_PATH];
+
+				Format(info, sizeof(info), "Choose gamemode, then next map");
+				newmenu.SetTitle(info);
+
+				newmenu.ExitBackButton = true;
+
+				for(int x = 0; x < count; x++)
+				{
+					gamemodes.GetString(x, info, sizeof(info));
+					Format(gamemode, sizeof(gamemode), "%s    %s", info, InsurgencyMap_IsGameTypeCoop(info) ? "coop":"pvp");
+					newmenu.AddItem(info, gamemode);
+				}
+				newmenu.Display(param1, MENU_TIME_FOREVER);
+
+				delete gamemodes;
+				return;
 			}
 		}
 		hTopMenu.Display(param1, TopMenuPosition_LastCategory);
 	}
 }
 
+
+
+// case 0
 public int MenuHandler_Map(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
@@ -184,13 +216,19 @@ public int MenuHandler_Map(Menu menu, MenuAction action, int param1, int param2)
 	}
 	else if (action == MenuAction_Select)
 	{
-		char info[64];
+		char info[PLATFORM_MAX_PATH];
 		menu.GetItem(param2, info, sizeof(info));
-		ForceChangeLevel(info, "Insurgency_maps menu");
-		//hTopMenu.Display(param1, TopMenuPosition_LastCategory);
+
+		PrintToChatAll("[SM] Changing map to %s", info);
+		
+		DataPack pack;
+		CreateDataTimer(5.0, timer_changemap, pack, TIMER_FLAG_NO_MAPCHANGE);
+		pack.WriteString(info);
+		pack.Reset();
 	}
 }
 
+// case 1
 public int MenuHandler_MapGamemode(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
@@ -206,10 +244,10 @@ public int MenuHandler_MapGamemode(Menu menu, MenuAction action, int param1, int
 	}
 	else if (action == MenuAction_Select)
 	{
-		char map[64];
+		char map[PLATFORM_MAX_PATH];
 		menu.GetItem(param2, map, sizeof(map));
 
-		ArrayList array = new ArrayList(ByteCountToCells(64));
+		ArrayList array = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
 		InsurgencyMap_MapGamemodesArray(map, array);
 
 		int count = GetArraySize(array);
@@ -221,10 +259,10 @@ public int MenuHandler_MapGamemode(Menu menu, MenuAction action, int param1, int
 			return;
 		}
 
-		Menu newmenu = new Menu(MenuHandler_MapGamemodeFinal);
+		Menu newmenu = new Menu(MenuHandler_Final);
 
-		char info[64];
-		char gamemode[64];
+		char info[PLATFORM_MAX_PATH];
+		char gamemode[PLATFORM_MAX_PATH];
 		Format(info, sizeof(info), "Choose gamemode (%s)", map);
 
 		newmenu.SetTitle(info);
@@ -244,7 +282,9 @@ public int MenuHandler_MapGamemode(Menu menu, MenuAction action, int param1, int
 	}
 }
 
-public int MenuHandler_MapGamemodeFinal(Menu menu, MenuAction action, int param1, int param2)
+
+// case 2
+public int MenuHandler_GamemodeMap(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -259,8 +299,75 @@ public int MenuHandler_MapGamemodeFinal(Menu menu, MenuAction action, int param1
 	}
 	else if (action == MenuAction_Select)
 	{
-		char info[64];
-		menu.GetItem(param2, info, sizeof(info));
-		ForceChangeLevel(info, "Insurgency_maps menu");
+		char gamemode[PLATFORM_MAX_PATH];
+		menu.GetItem(param2, gamemode, sizeof(gamemode));
+
+		ArrayList array = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+		InsurgencyMap_GamemodeMapsArray(gamemode, array);
+
+		int count = GetArraySize(array);
+
+		if(count <= 0)
+		{
+			delete array;
+			hTopMenu.Display(param1, TopMenuPosition_LastCategory);
+			return;
+		}
+
+		Menu newmenu = new Menu(MenuHandler_Final);
+
+		char info[PLATFORM_MAX_PATH];
+		char map[PLATFORM_MAX_PATH];
+		Format(info, sizeof(info), "Choose map (%s)", gamemode);
+
+		newmenu.SetTitle(info);
+		newmenu.ExitBackButton = true;
+
+		for(int x = 0; x < count; x++)
+		{
+			array.GetString(x, map, sizeof(map));
+			Format(info, sizeof(info), "%s %s", map, gamemode);
+			newmenu.AddItem(info, map);
+		}
+		newmenu.Display(param1, MENU_TIME_FOREVER);
+
+		delete array;
+		return;
 	}
 }
+
+public int MenuHandler_Final(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param2 == MenuCancel_ExitBack && hTopMenu != null)
+		{
+			hTopMenu.Display(param1, TopMenuPosition_LastCategory);
+		}
+	}
+	else if (action == MenuAction_Select)
+	{
+		char info[PLATFORM_MAX_PATH];
+		menu.GetItem(param2, info, sizeof(info));
+
+		PrintToChatAll("[SM] Changing map to %s", info);
+		
+		DataPack pack;
+		CreateDataTimer(5.0, timer_changemap, pack, TIMER_FLAG_NO_MAPCHANGE);
+		pack.WriteString(info);
+		pack.Reset();
+	}
+}
+
+public Action timer_changemap(Handle timer, DataPack pack)
+{
+	char info[PLATFORM_MAX_PATH];
+	pack.ReadString(info, sizeof(info));
+	ForceChangeLevel(info, "Insurgency_maps menu");
+}
+
+
