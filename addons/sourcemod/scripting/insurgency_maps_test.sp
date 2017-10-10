@@ -23,12 +23,12 @@ public Action test(int client, int agrs)
 
 	array.Clear();
 
-	InsurgencyMap_MapGamemodesArray("baghdad_b5", array);
+	InsurgencyMap_MapGamemodesArray("market", array);
 
 	for(int i = 0; i < array.Length; i++)
 	{
 		array.GetString(i, buffer, sizeof(buffer));
-		PrintToServer("InsurgencyMap_MapGamemodesArray(baghdad_b5) %i %s", i, buffer);
+		PrintToServer("InsurgencyMap_MapGamemodesArray(market) %i %s", i, buffer);
 	}
 
 	array.Clear();

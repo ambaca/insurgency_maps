@@ -191,12 +191,12 @@ public _Native_InsurgencyMap_Gamemode(Handle plugin, int numParams)
 
 	char gamemode[64];
 
-	int logic = GameRules_GetPropEnt("m_hLogicGameType");
+	ConVar mp_gamemode = FindConVar("mp_gamemode");
 
-	if(logic != -1)
+	if(mp_gamemode != null)
 	{
-		GetEntityClassname(logic, gamemode, sizeof(gamemode));
-		ReplaceString(gamemode, sizeof(gamemode), "logic_", "", false);
+		mp_gamemode.GetString(gamemode, sizeof(gamemode));
+		delete mp_gamemode;
 	}
 
 	SetNativeString(1, gamemode, param_len, false);
